@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+   <link rel="stylesheet" href="css/Connect.css">  
+   <script src="control/jquery-3.1.0.js"></script>
+   <script src="javascript/Context.js"></script>
+   <script src="javascript/BoardUtil.js"></script>
+   <script src="javascript/ElementFactory.js"></script>
+   <script src="javascript/ConnectEvents.js"></script>
+   
+   
+  <title>Connect 4</title>
+</head>
+<body>
+    <div id="#container" class="contaier">
+        <div class="header">
+            <label>Connect 4 Game</label>
+        </div>
+        <div id="board-box" class="board"></div>
+        <div id="content" class="detail">
+            <fieldset>
+                <legend>Select Opponent</legend>
+                <div id="group-box-opponent">
+                    <div>
+                       <input type="radio" name="opponent" id="opt-human" checked="checked"  value="0">
+                        <label for="opt-human">Human</label>
+                   </div>
+                   <div>
+                        <input type="radio" name="opponent" id="opt-computer" value="1">
+                        <label for="opt-computer">Computer</label>
+                    </div>    
+                 </div>
+            <fieldset>
+                
+             <div id="group-box-button" class="detail">
+               <input id="btn-start" type="button" value="Start" />
+             </div>
+
+        </div>
+        
+    </div>  
+</body>
+</html>
