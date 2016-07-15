@@ -1,1 +1,1 @@
-web: sh target/connect
+web: sh target/bin/webapp
