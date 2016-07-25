@@ -12,8 +12,17 @@ a {
 a:active, a:hover {
   outline: 0;
 }
+fieldset{
+	margin-bottom:10px;
+}
 label {
    margin-left: 5px;
+}
+input[type="text"]{
+	margin:2px;
+}
+input[readonly="readonly"]{
+	 background: gray;
 }
 .header {
   height: 70px;
@@ -70,6 +79,23 @@ label {
     background: yellow;
     transition: display 5s ease;
 }
+.blink {
+    background: gray;
+    transition: display 5s ease;
+}
 #group-box-button{
     margin:5px;
+}
+.message{
+	font-size:20px;
+	margin:5px;
+}
+.warning{
+	color: yellow;
+}
+.alert{
+	color: red;
+}
+.general{
+	color: blue;
 }

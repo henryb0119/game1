@@ -8,6 +8,8 @@ var BoardUtil;
 		propX, propY;
 		//reset container
 		$board.empty();
+		$("#connect-msg").text("").hide();
+		ConnectEvents.lockPlayer = true;
 		//add each row
 		for(var row=0; row<rowCount; row++){
 			//div poperties
@@ -31,17 +33,17 @@ var BoardUtil;
 	};
 
 	BoardUtil.initialize = function(){
-                BoardUtil.STATUS = Context.STATUS_BUSY;
+                BoardUtil.status = Context.STATUS_BUSY;
 		initializeBoard();
 		initializeCircles();
-                ConnectEvents.initialize()
-                BoardUtil.STATUS = Context.STATUS_READY;
-                ConnectEvents.curPlayer == 0
-	}
+                ConnectEvents.initialize();
+                BoardUtil.status = Context.STATUS_READY;
+                ConnectEvents.curPlayer == 0;
+	};
         BoardUtil.initializeDefault = function(){
             //default
-            $("#opt-human").trigger("click")
-        }
+            $("#opt-human").trigger("click");
+        };
 })(BoardUtil || (BoardUtil = {}));
 
 $(function() {

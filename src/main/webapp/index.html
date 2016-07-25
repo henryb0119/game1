@@ -8,7 +8,8 @@
    <script src="javascript/BoardUtil.js"></script>
    <script src="javascript/ElementFactory.js"></script>
    <script src="javascript/ConnectEvents.js"></script>
-   
+   <script src="javascript/Observer.js"></script>
+   <script src="javascript/MessageUtil.js"></script>
    
   <title>Connect 4</title>
 </head>
@@ -18,20 +19,35 @@
             <label>Connect 4 Game</label>
         </div>
         <div id="board-box" class="board"></div>
+        
         <div id="content" class="detail">
-            <fieldset>
-                <legend>Select Opponent</legend>
-                <div id="group-box-opponent">
+        <div class="message" id="connect-msg"></div>
+          <fieldset>
+              <legend>Select Opponent</legend>
+              <div id="group-box-opponent">
+                  <div>
+                     <input type="radio" name="opponent" id="opt-human" checked="checked"  value="0">
+                      <label for="opt-human">Human</label>
+                 </div>
+                 <div>
+                      <input type="radio" name="opponent" id="opt-computer" value="1">
+                      <label for="opt-computer">Computer</label>
+                  </div>    
+               </div>
+          </fieldset>
+          <fieldset>
+                <legend>Players</legend>
+                <div id="group-box-players">
                     <div>
-                       <input type="radio" name="opponent" id="opt-human" checked="checked"  value="0">
-                        <label for="opt-human">Human</label>
+                    	<label for="player-1">Player 1</label>
+                        <input type="text" id="player-1" title="Player 1" />
                    </div>
                    <div>
-                        <input type="radio" name="opponent" id="opt-computer" value="1">
-                        <label for="opt-computer">Computer</label>
+                  		<label for="player-2">Player 2</label>
+                        <input type="text" id="player-2" title="Player 2" />
                     </div>    
                  </div>
-            <fieldset>
+            </fieldset>
                 
              <div id="group-box-button" class="detail">
                <input id="btn-start" type="button" value="Start" />

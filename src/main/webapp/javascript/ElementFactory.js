@@ -11,5 +11,5 @@ var ElementFactory = new function() {
 		}
 		elems.push(" />");
 		$aParent.append(elems.join(""));
-	}
-}
+	};
+};
