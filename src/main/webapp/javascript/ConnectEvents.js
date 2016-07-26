@@ -1,8 +1,10 @@
 var ConnectEvents;
 (function (ConnectEvents){
-	ConnectEvents.curPlayer = 0;
-	ConnectEvents.lockPlayer = false;
+	//default player
+	ConnectEvents.curPlayer = Context.PLAYER_MAIN;
+	ConnectEvents.lockPlayer = false; //set to true after start button is clicked
 	var defensePattern = {}, offensePattern = {};
+
 	var addChip = function($aCol){
 		if(ConnectEvents.lockPlayer){
 			return;
@@ -14,21 +16,35 @@ var ConnectEvents;
 
 		var success = false;
 		$.each($curCols, function(i){
-			//TODO:animate as falling object 
+			//check if it has a valid slot
 			if(isValidSlot(i, $curCols)){
+				//check if valid to move
 				if(Observer.getStatus() != Context.STATUS_READY /*human move*/
 					&& Observer.getStatus() != Context.STATUS_BUSY /*computer move*/
 				){
 					return false;
 				}
-				success = true;
-				$lastMove = $(this);
+				//add the chip virtually
 				$(this).find(Context.CLASS_CIRCLE).addClass(Context.PLAYERS[ConnectEvents.curPlayer]);
+				success = true;
+				
 				if(hasWinner($(this))){
+					//inform winner
 					Observer.setStatus(Context.STATUS_WINNER);
 					ConnectEvents.lockPlayer = true;
 					var $connected = $(Context.ID_BOARD).find("." + Context.CONNECTED);
-					blinkChips($connected);
+					//double check connected chips
+					if($connected.length > 4){
+						var ctr = 0;
+						$.each($connected, function(){
+							if(!$(this).hasClass(Context.PLAYERS[ConnectEvents.curPlayer]) || ++ctr > 4
+							){
+								$(this).removeClass(Context.CONNECTED);
+							}
+						});
+					}
+					//new set
+					blinkChips($(Context.ID_BOARD).find("." + Context.CONNECTED));
 					return true;
 				}
 				else if(isDraw()){
@@ -36,7 +52,11 @@ var ConnectEvents;
 					Observer.setStatus(Context.STATUS_DRAW);
 					return true;
 				}
-				ConnectEvents.curPlayer = ConnectEvents.curPlayer == 1 ? 0 : 1; //set next player
+				//store last player move
+				Observer.setLastMove(ConnectEvents.curPlayer);
+				//change player
+				ConnectEvents.curPlayer = ConnectEvents.curPlayer == Context.PLAYER_OPPONENT ? Context.PLAYER_MAIN : Context.PLAYER_OPPONENT; //set next player
+				Observer.setStatus(Context.STATUS_READY);
 				return;
 			};
 		});
@@ -79,10 +99,8 @@ var ConnectEvents;
 		return false;
 	},
 	isDraw = function (){
-		if ($(Context.ID_BOARD).find("." + Context.PLAYERS[0] + ", ." + Context.PLAYERS[1]).length >= 7 * 6){
-			return true;
-		}
-		return false;
+		var $slots = $(Context.ID_BOARD).find(".circle").not("." + Context.PLAYERS[0] + ", ." + Context.PLAYERS[1]);
+		return $slots.length == 0; //no available slot
 	};
 	getHorizonal = function($aCell){
 		return $aCell.closest(".row").find(".col");
@@ -144,7 +162,7 @@ var ConnectEvents;
 	},
 	computerMove = function($aPrevMove){
 		var offense = 1, defense = 0,
-		$possibleMoves = getLastMovePerColumn();
+		$possibleMoves = getLastMovePerColumn();//get all possible moves;
 		$.each($possibleMoves, function(){
 			var hPattern = getHorizonal($(this)),
 			vPattern = getVertical($(this)),
@@ -197,18 +215,17 @@ var ConnectEvents;
 		if(defenseMax < 2 && defenseMax < 2){
 			return false;
 		}
-		//sure win otherwise prioritize defense
+		//prioritize sure win otherwise prioritize defense
+		var chipAdded = false;
 		if(offensMax == 3 || offensMax > defenseMax){
-			addChip($("#" + slotId).closest(".col"));
+			chipAdded = addChip($("#" + slotId).closest(".col"));
 			delete offensePattern[slotId];
-			return true;
 		}
-		else{
-			addChip($("#" + slotId).closest(".col"));
+		if(!chipAdded){
+			chipAdded = addChip($("#" + slotId).closest(".col"));
 			delete defensePattern[slotId];
-			return true;
 		}
-		
+		return chipAdded;	
 	}
 	,checkMove = function($aCells, aMoveType, aPattern){
 		if($aCells.length == $aCells.find([".",Context.PLAYERS[0],", .",Context.PLAYERS[1]].join("")).length){
@@ -299,6 +316,7 @@ var ConnectEvents;
 		offensePattern = {};
 		$board.unbind().bind("click", function(e){
 			if(Observer.getStatus() == Context.STATUS_BUSY){
+//				computer's turn
 				return;
 			};
 			if($(e.target).hasClass("circle")){
@@ -307,7 +325,7 @@ var ConnectEvents;
 			else if($(e.target).hasClass("col")){
 				addChip($(e.target));
 			}
-			if(Context.OPPONENT == 1 && ConnectEvents.curPlayer == 1
+			if(Context.OPPONENT == Context.OPPONENT_COMPUTER && ConnectEvents.curPlayer == Context.PLAYER_OPPONENT
 					&& Observer.getStatus() == Context.STATUS_READY
 			){
 				Observer.setStatus(Context.STATUS_BUSY);
@@ -316,30 +334,41 @@ var ConnectEvents;
 						return;
 					}
 					computerMove();
-					Observer.setStatus(Context.STATUS_READY);
+					
 				},500);
 			}
 		});
+		//START BUTTON
 		$("#btn-start").unbind().bind("click", function(){
 			BoardUtil.initialize();
+			//add player name if not specified
 			if($("#player-1").val() == ""){
 				$("#player-1").val("Player A");
 			}
 			if($("#player-2").val() == ""){
 				$("#player-2").val("Player B");
 			}
+			//set ready to move
 			Observer.setStatus(Context.STATUS_READY);
-			if(Context.OPPONENT == 1){
-				ConnectEvents.curPlayer = 0;
+			if(Context.OPPONENT == Context.OPPONENT_COMPUTER){
+				ConnectEvents.curPlayer = Context.PLAYER_MAIN;
 			}
 			ConnectEvents.lockPlayer = false;
 		});
+		
 		$("[name='opponent']").unbind().bind("click", function(){
+			//set the opponent
 			Context.OPPONENT = parseInt($(this).val());
+			//reset board
 			BoardUtil.initialize();
 			if($(this).attr("id") == "opt-computer"){
-				ConnectEvents.curPlayer = 0; //human first move;
+				ConnectEvents.curPlayer = Context.PLAYER_MAIN; //human first move;
+				//set player 2 name as computer and set to read only
 				$("#player-2").val("Computer").attr("readOnly", "readonly");
+			}
+			else{
+				//remove read only attribute
+				$("#player-2").val("").removeAttr("readOnly");
 			}
 
 		});

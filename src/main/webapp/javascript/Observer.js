@@ -1,6 +1,6 @@
 var Observer;
 (function (Observer){
-	var status = Context.STATUS_READY,
+	var status = Context.STATUS_READY, lastMove = 0,
 	observeStatus = function(){
 		switch (status){ 
 		case Context.STATUS_READY:
@@ -26,6 +26,10 @@ var Observer;
 	Observer.getStatus = function(){
 		return status;
 	};
-	
-	
+	Observer.setLastMove = function(aLastMove){
+		lastMove = aLastMove;
+	};
+	Observer.getLastMove = function(){
+		return lastMove;
+	};
 })(Observer || (Observer = {}));

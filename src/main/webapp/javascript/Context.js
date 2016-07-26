@@ -15,5 +15,9 @@ var Context = new function() {
 	this.MAX_X = 7;
 	this.CLASS_BLINK = "blink";
 	this.MESSAGE_WINNER = "<player> Wins!";
-	
+	this.MESSAGE_DRAW = "It's a draw!";
+	this.PLAYER_MAIN = 0;
+	this.PLAYER_OPPONENT = 1;
+	this.OPPONENT_HUMAN = 0;
+	this.OPPONENT_COMPUTER = 1;
 };
