@@ -164,19 +164,43 @@ var ConnectEvents;
 		var offense = 1, defense = 0,
 		$possibleMoves = getLastMovePerColumn();//get all possible moves;
 		$.each($possibleMoves, function(){
-			var hPattern = getHorizonal($(this)),
-			vPattern = getVertical($(this)),
-			dsPattern = getDiagonalS($(this)),
-			dnPattern = getDiagonalN($(this));
+//			ignore if no possible move to the current column
+			if($(this).closest(".row").index() == 0){
+				return;
+			}
+			var $lastMove = $(this); 
+			var curCol = $(this).find(".circle").index() + 1; //current column index
+			//available slot of current column
+			var $availSlot = $(this).closest(".row").prev().find(".col-" + curCol);
+			//read the possible pattern connection based from the last move per column
+			var hLPattern = getHorizonal($lastMove),
+			vLPattern = getVertical($lastMove),
+			dsLPattern = getDiagonalS($lastMove),
+			dnLPattern = getDiagonalN($lastMove);
+			//read the possible pattern connection  based from the available slot per column
+			var hAPattern = getHorizonal($availSlot),
+			vAPattern = getVertical($availSlot),
+			dsAPattern = getDiagonalS($availSlot),
+			dnAPattern = getDiagonalN($availSlot);
 			
-			checkMove(hPattern, defense, Context.PATTERN.HORIZONTAL);
-			checkMove(vPattern, defense, Context.PATTERN.VERTICAL);
-			checkMove(dsPattern, defense, Context.PATTERN.DIAGONALS);
-			checkMove(dnPattern, defense, Context.PATTERN.DIAGONALN);
-			checkMove(hPattern, offense, Context.PATTERN.HORIZONTAL);
-			checkMove(vPattern, offense, Context.PATTERN.VERTICAL);
-			checkMove(dsPattern, offense, Context.PATTERN.DIAGONALN);
-			checkMove(dnPattern, offense, Context.PATTERN.DIAGONALS);
+			//check next possible move offensively
+			checkMove($availSlot, hLPattern, offense, Context.PATTERN.HORIZONTAL);
+			checkMove($availSlot, vLPattern, offense, Context.PATTERN.VERTICAL);
+			checkMove($availSlot, dsLPattern, offense, Context.PATTERN.DIAGONALS);
+			checkMove($availSlot, dnLPattern, offense, Context.PATTERN.DIAGONALN);
+			checkMove($availSlot, hAPattern, offense, Context.PATTERN.HORIZONTAL);
+			checkMove($availSlot, vAPattern, offense, Context.PATTERN.VERTICAL);
+			checkMove($availSlot, dsAPattern, offense, Context.PATTERN.DIAGONALN);
+			checkMove($availSlot, dnAPattern, offense, Context.PATTERN.DIAGONALS);
+			//check next possible move defensively
+			checkMove($availSlot, hLPattern, defense, Context.PATTERN.HORIZONTAL);
+			checkMove($availSlot, vLPattern, defense, Context.PATTERN.VERTICAL);
+			checkMove($availSlot, dsLPattern, defense, Context.PATTERN.DIAGONALS);
+			checkMove($availSlot, dnLPattern, defense, Context.PATTERN.DIAGONALN);
+			checkMove($availSlot, hAPattern, defense, Context.PATTERN.HORIZONTAL);
+			checkMove($availSlot, vAPattern, defense, Context.PATTERN.VERTICAL);
+			checkMove($availSlot, dsAPattern, defense, Context.PATTERN.DIAGONALN);
+			checkMove($availSlot, dnAPattern, defense, Context.PATTERN.DIAGONALS);
 		});
 		
 		var hasBestMove = false;
@@ -195,82 +219,92 @@ var ConnectEvents;
 			}
 		}
 	},setBestMove = function(){
-		var offensMax = 0; defenseMax = 0, offenseKey = null, slotId = null;
+		var offensMax = 0; defenseMax = 0
+			, offenseId = null, defenseId = null;
 		for(var key in defensePattern){
 			for (var pattern in defensePattern[key]){
 				if(defensePattern[key][pattern] > defenseMax){
 					defenseMax = defensePattern[key][pattern];
-					slotId = key;
+					defenseId = key;
 				}
 			}
 		}
 		for(key in offensePattern){
 			for (var pattern in offensePattern[key]){
-				if(offensePattern[key][pattern] > defenseMax){
-					defenseMax = offensePattern[key][pattern];
-					slotId = key;
+				if(offensePattern[key][pattern] > offensMax){
+					offensMax = offensePattern[key][pattern];
+					offenseId = key;
 				}
 			}
 		}
-		if(defenseMax < 2 && defenseMax < 2){
+		if(defenseMax < 2 && offensMax < 2){
 			return false;
 		}
 		//prioritize sure win otherwise prioritize defense
 		var chipAdded = false;
 		if(offensMax == 3 || offensMax > defenseMax){
-			chipAdded = addChip($("#" + slotId).closest(".col"));
-			delete offensePattern[slotId];
+			chipAdded = addChip($("#" + offenseId).closest(".col"));
+			delete offensePattern[offenseId];
 		}
 		if(!chipAdded){
-			chipAdded = addChip($("#" + slotId).closest(".col"));
-			delete defensePattern[slotId];
+			chipAdded = addChip($("#" + defenseId).closest(".col"));
+			delete defensePattern[defenseId];
 		}
 		return chipAdded;	
 	}
-	,checkMove = function($aCells, aMoveType, aPattern){
-		if($aCells.length == $aCells.find([".",Context.PLAYERS[0],", .",Context.PLAYERS[1]].join("")).length){
+	,checkMove = function(aCell, $aCells, aMoveType, aPattern){
+		var playerClass = [".",Context.PLAYERS[0],", .",Context.PLAYERS[1]].join("");
+		//for assurance of draw - to be deleted later
+		if($aCells.length == $aCells.find(playerClass).length){
 			return;
 		}
-		var ctr = 0, nxtIdx = 0, prvIdx = 0, validCell = null;
-		$.each($aCells, function(i){
-			
-			var $chip = $(this).find(".circle");
+		
+		var ctr = 0, baseColId = aCell.find(".circle").attr("id");
+		
+		var addPossibleMove = function($possibleSlot, aMoveType){
 			var pattern = aMoveType == 0 ? defensePattern : offensePattern;
+			//get current column
+			var curCol = $possibleSlot.index() + 1;
+			//get all circles of current column
+			var $curCols = $(Context.ID_BOARD).find(".col-" + curCol);
+			if(isValidSlot($possibleSlot.closest(".row").index(), $curCols)){
+				var id = $possibleSlot.find(".circle").attr("id");
+				if(!pattern.hasOwnProperty(id)){
+					pattern[id] = {};
+				}
+				if(!pattern[id].hasOwnProperty(aPattern) || pattern[id][aPattern] < ctr){
+					pattern[id][aPattern] = ctr;
+				}
+			}
+		};
+		
+		for(var i=$aCells.length-1; i>0; i--){
+			var $this = $aCells.eq(i);
+			if(baseColId == $this.find(".circle").attr("id")){
+				continue;
+			}
+			var $chip = $this.find(".circle");
+			
+			
+			//a player has chip on current slot
 			if($chip.hasClass(Context.PLAYERS[aMoveType])){
-				if(++ctr >= 2){
-					validCell = null;
-					if($aCells.eq(i+1).length > 0){
-						nxtIdx = $aCells.eq(i+1).index() + 1;
-						var $curCols = $(Context.ID_BOARD).find(".col-" + nxtIdx);
-						if(isValidSlot($aCells.eq(i+1).closest(".row").index(), $curCols)){
-							validCell = $aCells.eq(i+1);
-						}
+//				has 2 or 3 connections and next slot is empty
+				if( ++ctr >= 2){
+					//collect possible moves
+					//check slot above current slot
+					if($aCells.eq(i-1).find(playerClass).length == 0){
+						addPossibleMove($aCells.eq(i-1), aMoveType);
 					}
-					if(validCell == null && $aCells.eq(i-ctr).length > 0){
-						prvIdx = $aCells.eq(i-ctr).index() + 1;
-						var $curCols = $(Context.ID_BOARD).find(".col-" + prvIdx);
-						if(isValidSlot($aCells.eq(i-ctr).closest(".row").index(), $curCols)){
-							validCell = $aCells.eq(i-ctr);
-						}
-					}
-					if(validCell != null){
-						var id = validCell.attr("id");
-						if(!pattern.hasOwnProperty(id)){
-							pattern[id] = {};
-						}
-						if(!pattern[id].hasOwnProperty(aPattern) || pattern[id][aPattern] < ctr){
-							pattern[id][aPattern] = ctr;
-						}
-					}
-					else{
-						ctr = 0;
+					//check slot below current slot
+					if((i + ctr) < $aCells.length){
+						addPossibleMove($aCells.eq(i + ctr), aMoveType);
 					}
 				}
 			}
 			else{
 				ctr = 0;
 			}
-		});
+		};
 	},
 	isConnected = function($aCells, $aCell){
 		var ctr = 0, ret = false;
@@ -309,7 +343,7 @@ var ConnectEvents;
 				blinkChips(arg[0]);
 			}
 		},500,[$chips]);
-	}
+	};
 	ConnectEvents.initialize = function(){
 		var $board = $(Context.ID_BOARD);
 		defensePattern = {};

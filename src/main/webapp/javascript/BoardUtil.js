@@ -40,14 +40,16 @@ var BoardUtil;
                 BoardUtil.status = Context.STATUS_READY;
                 ConnectEvents.curPlayer == 0;
 	};
-        BoardUtil.initializeDefault = function(){
-            //default
-            $("#opt-human").trigger("click");
-        };
+    BoardUtil.initializeDefault = function(){
+        //default
+    	$("#player-1, #player-2").val("").removeAttr("readOnly");
+        $("#opt-human").trigger("click");
+        
+    };
 })(BoardUtil || (BoardUtil = {}));
 
 $(function() {
 	BoardUtil.initialize();
-        BoardUtil.initializeDefault();
+    BoardUtil.initializeDefault();
         
 });
